@@ -1,0 +1,88 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../server/generated/prisma"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id           Int                 @id @default(autoincrement())
+  slug         String              @unique
+  title        String
+  category     String
+  summary      String
+  challenge    String
+  approach     String
+  outcome      String
+  credit       String
+  repository   String
+  liveUrl      String
+  published    Boolean             @default(false)
+  position     Int
+  revision     Int                 @default(1)
+  demos        ProjectDemo[]
+  technologies ProjectTechnology[]
+
+  @@index([published, position])
+}
+
+model Demo {
+  id            Int           @id @default(autoincrement())
+  slug          String        @unique
+  title         String
+  description   String
+  credit        String
+  configuration Json
+  revision      Int           @default(1)
+  projects      ProjectDemo[]
+}
+
+model Technology {
+  id           Int                 @id @default(autoincrement())
+  name         String              @unique
+  category     String
+  description  String
+  docsUrl      String
+  revision     Int                 @default(1)
+  projects     ProjectTechnology[]
+}
+
+model ProjectDemo {
+  projectId Int
+  demoId    Int
+  position  Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  demo      Demo    @relation(fields: [demoId], references: [id], onDelete: Restrict)
+
+  @@id([projectId, demoId])
+  @@index([demoId])
+}
+
+model ProjectTechnology {
+  projectId    Int
+  technologyId Int
+  position     Int
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Restrict)
+
+  @@id([projectId, technologyId])
+  @@index([technologyId])
+}
+
+model Admin {
+  id           Int    @id
+  email        String @unique
+  passwordHash String
+}
+
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire])
+  @@map("session")
+}
